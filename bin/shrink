@@ -40,6 +40,8 @@ if (!$config->isValidPlatform()) {
 
 $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
+    echo "{$name}:\n";
+    print_r($rel);
     if ($rel->scheme == 'mysql') {
         $dbs[] = $name;
     }
@@ -63,7 +65,7 @@ foreach ($dbs as $dbName) {
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND ENGINE LIKE 'InnoDB'
-AND DATA_FREE > 0;")->execute($dbName)->fetchAll(\PDO::FETCH_ASSOC);
+AND DATA_FREE > 0;")->execute([$dbName])->fetchAll(\PDO::FETCH_ASSOC);
     } catch (\Exception $e) {
         printf("Error reading tables in database %s: %s\n", $dbName, $e->getMessage());
         continue;
