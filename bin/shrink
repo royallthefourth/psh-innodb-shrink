@@ -10,14 +10,14 @@ $autoloadPaths = [
 ];
 
 $realAutoload = '';
-foreach($autoloadPaths as $path) {
-    if(file_exists($path)) {
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
         $realAutoload = $path;
         break;
     }
 }
 
-if($realAutoload == '') {
+if ($realAutoload == '') {
     die("autoload.php not found.\n");
 }
 
@@ -27,7 +27,7 @@ use Platformsh\ConfigReader\Config;
 
 // USAGE shrink RATIO
 
-if(sizeof($argv) != 2) {
+if (sizeof($argv) != 2) {
     die("Incorrect number of arguments. Invoke as \"shrink RATIO\" where RATIO is a float.\n");
 }
 
@@ -60,7 +60,7 @@ foreach ($dbs as $rel => $path) {
 
     $tables = [];
     try {
-        $spdo->prepare(
+        $tables = $spdo->prepare(
             "SELECT TABLE_NAME, DATA_LENGTH, DATA_FREE
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
@@ -73,7 +73,7 @@ AND DATA_FREE > 0;")->execute([$path])->fetchAll(\PDO::FETCH_ASSOC);
 
     foreach ($tables as $t) {
         $table = new \Shrinker\Table($t['TABLE_NAME'], $path, $t['DATA_FREE'], $t['DATA_LENGTH']);
-        if ($table->ShouldShrink()) {
+        if ($table->ShouldShrink($ratio)) {
             echo $table->LogStart();
             try {
                 $table->Shrink($spdo);
