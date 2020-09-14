@@ -40,7 +40,7 @@ if (!$config->isValidPlatform()) {
 
 $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
-    if ($rel[0]->scheme == 'mysql') {
+    if ($rel->scheme == 'mysql') {
         $dbs[] = $name;
     }
 }
