@@ -1,0 +1,25 @@
+{
+    "name": "royallthefourth/psh-innodb-shrink",
+    "description": "Provides a cron to shrink InnoDB tables with lots of free space",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Royall Spence",
+            "email": "royall@royall.us"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Shrinker\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.2",
+        "platformsh/config-reader": "^2.3",
+        "royallthefourth/smooth-pdo": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
+    }
+}

@@ -1,0 +1,69 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use Platformsh\ConfigReader\Config;
+
+// USAGE shrink RATIO
+
+if(sizeof($argv) != 2) {
+    die("Incorrect number of argument. Invoke as \"shrink RATIO\" where RATIO is a float.\n");
+}
+
+$ratio = floatval($argv[1]);
+
+$config = new Config();
+if (!$config->isValidPlatform()) {
+    die("Not in a Platform.sh Environment.\n");
+}
+
+$dbs = [];
+foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
+    if ($rel[0]['scheme'] == 'mysql') {
+        $dbs[] = $name;
+    }
+}
+
+foreach ($dbs as $dbName) {
+    $credentials = $config->credentials($dbName);
+    $pdo = new PDO($config->formattedCredentials('database', 'pdo_mysql'),
+        $credentials['username'], $credentials['password'],
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
+        ]
+    );
+    $spdo = new RoyallTheFourth\SmoothPdo\DataObject($pdo);
+
+    $tables = [];
+    try {
+        $spdo->prepare(
+            "SELECT TABLE_NAME, DATA_LENGTH, DATA_FREE
+FROM information_schema.tables
+WHERE TABLE_SCHEMA LIKE ?
+AND ENGINE LIKE 'InnoDB'
+AND DATA_FREE > 0;")->execute($dbName)->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (\Exception $e) {
+        printf("Error reading tables in database %s: %s\n", $dbName, $e->getMessage());
+        continue;
+    }
+
+    foreach ($tables as $t) {
+        $table = new \Shrinker\Table($t['TABLE_NAME'], $dbName, $t['DATA_FREE'], $t['DATA_LENGTH']);
+        if ($table->ShouldShrink()) {
+            echo $table->LogStart();
+            try {
+                $table->Shrink($spdo);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+                continue;
+            }
+            echo $table->LogFinish();
+        } else {
+            echo $table->LogSkip();
+        }
+    }
+}
