@@ -3,7 +3,21 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../autoload.php'
+];
+
+$realAutoload = '';
+foreach($autoloadPaths as $path) {
+    if(file_exists($path)) {
+        $realAutoload = $path;
+        break;
+    }
+    die('autoload.php not found.\n');
+}
+
+require $realAutoload;
 
 use Platformsh\ConfigReader\Config;
 
