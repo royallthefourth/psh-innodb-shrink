@@ -42,14 +42,14 @@ $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
     echo "{$name}:\n";
     print_r($rel);
-    if ($rel->scheme == 'mysql') {
-        $dbs[] = $name;
+    if ($rel[0]->scheme == 'mysql') {
+        $dbs[$name] = $rel[0]->path;
     }
 }
 
-foreach ($dbs as $dbName) {
-    $credentials = $config->credentials($dbName);
-    $pdo = new PDO($config->formattedCredentials('database', 'pdo_mysql'),
+foreach ($dbs as $rel => $path) {
+    $credentials = $config->credentials($rel);
+    $pdo = new PDO($config->formattedCredentials($rel, 'pdo_mysql'),
         $credentials['username'], $credentials['password'],
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -65,14 +65,14 @@ foreach ($dbs as $dbName) {
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND ENGINE LIKE 'InnoDB'
-AND DATA_FREE > 0;")->execute([$dbName])->fetchAll(\PDO::FETCH_ASSOC);
+AND DATA_FREE > 0;")->execute([$path])->fetchAll(\PDO::FETCH_ASSOC);
     } catch (\Exception $e) {
-        printf("Error reading tables in database %s: %s\n", $dbName, $e->getMessage());
+        printf("Error reading tables in relationship %s: %s\n", $rel, $e->getMessage());
         continue;
     }
 
     foreach ($tables as $t) {
-        $table = new \Shrinker\Table($t['TABLE_NAME'], $dbName, $t['DATA_FREE'], $t['DATA_LENGTH']);
+        $table = new \Shrinker\Table($t['TABLE_NAME'], $path, $t['DATA_FREE'], $t['DATA_LENGTH']);
         if ($table->ShouldShrink()) {
             echo $table->LogStart();
             try {
