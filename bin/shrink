@@ -28,7 +28,7 @@ use Platformsh\ConfigReader\Config;
 // USAGE shrink RATIO
 
 if(sizeof($argv) != 2) {
-    die("Incorrect number of argument. Invoke as \"shrink RATIO\" where RATIO is a float.\n");
+    die("Incorrect number of arguments. Invoke as \"shrink RATIO\" where RATIO is a float.\n");
 }
 
 $ratio = floatval($argv[1]);
@@ -40,7 +40,7 @@ if (!$config->isValidPlatform()) {
 
 $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
-    if ($rel[0]['scheme'] == 'mysql') {
+    if ($rel[0]->scheme == 'mysql') {
         $dbs[] = $name;
     }
 }
