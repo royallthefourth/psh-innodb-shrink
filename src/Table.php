@@ -14,7 +14,7 @@ class Table
     private $dataFree;
     private $totalLength;
 
-    public function __construct(string $name, string $db, float $dataFree, float $dataLength)
+    public function __construct(string $name, string $db, int $dataFree, int $dataLength)
     {
         $this->name = $name;
         $this->db = $db;
@@ -43,13 +43,13 @@ class Table
             $this->dataFree / $this->totalLength);
     }
 
-    public function LogFinish(int $kbytes): string
+    public function LogFinish(int $bytes): string
     {
-        return sprintf("%s Finished shrinking table %s.%s. Saved %d kilobytes\n",
+        return sprintf("%s Finished shrinking table %s.%s. Saved %d bytes\n",
             date(DATE_ISO8601),
             $this->db,
             $this->name,
-            $kbytes);
+            $bytes);
     }
 
     public function ShouldShrink(float $ratio): bool
@@ -57,7 +57,7 @@ class Table
         if ($this->dataFree == 0 || $this->totalLength == 0) {
             return false;
         }
-        return $this->dataFree / $this->totalLength > $ratio;
+        return floatval($this->dataFree) / floatval($this->totalLength) > $ratio;
     }
 
     /**
@@ -85,9 +85,9 @@ AND DATA_FREE > 0;")->execute([$this->db, $this->name])->fetch(\PDO::FETCH_ASSOC
             return 0;
         }
 
-        $oldLength = $this->totalLength;
-        $this->totalLength = floatval($totalLength);
+        $oldLength = intval($this->totalLength);
+        $this->totalLength = intval($totalLength);
 
-        return (int)$totalLength - (int)$oldLength;
+        return $oldLength - $this->totalLength;
     }
 }
