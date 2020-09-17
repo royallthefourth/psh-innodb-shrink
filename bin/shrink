@@ -60,7 +60,7 @@ foreach ($dbs as $rel => $path) {
     $tables = [];
     try {
         $tables = $spdo->prepare(
-            "SELECT TABLE_NAME, DATA_LENGTH, DATA_FREE
+            "SELECT TABLE_NAME, DATA_LENGTH + INDEX_LENGTH AS DATA_LENGTH, DATA_FREE
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND ENGINE LIKE 'InnoDB'
