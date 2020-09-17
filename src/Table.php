@@ -12,14 +12,14 @@ class Table
     private $name;
     private $db;
     private $dataFree;
-    private $dataLength;
+    private $totalLength;
 
     public function __construct(string $name, string $db, float $dataFree, float $dataLength)
     {
         $this->name = $name;
         $this->db = $db;
         $this->dataFree = $dataFree;
-        $this->dataLength = $dataLength;
+        $this->totalLength = $dataLength;
         return $this;
     }
 
@@ -29,8 +29,8 @@ class Table
             date(DATE_ISO8601),
             $this->db,
             $this->name,
-            $this->dataLength,
-            $this->dataFree / $this->dataLength);
+            $this->totalLength,
+            $this->dataFree / $this->totalLength);
     }
 
     public function LogStart(): string
@@ -39,8 +39,8 @@ class Table
             date(DATE_ISO8601),
             $this->db,
             $this->name,
-            $this->dataLength,
-            $this->dataFree / $this->dataLength);
+            $this->totalLength,
+            $this->dataFree / $this->totalLength);
     }
 
     public function LogFinish(int $kbytes): string
@@ -54,10 +54,10 @@ class Table
 
     public function ShouldShrink(float $ratio): bool
     {
-        if ($this->dataFree == 0 || $this->dataLength == 0) {
+        if ($this->dataFree == 0 || $this->totalLength == 0) {
             return false;
         }
-        return $this->dataFree / $this->dataLength > $ratio;
+        return $this->dataFree / $this->totalLength > $ratio;
     }
 
     /**
@@ -74,20 +74,20 @@ class Table
         }
 
         try {
-            $dataLength = $spdo->prepare(
-                "SELECT DATA_LENGTH + INDEX_LENGTH + DATA_FREE AS DATA_LENGTH
+            $totalLength = $spdo->prepare(
+                "SELECT DATA_LENGTH + INDEX_LENGTH + DATA_FREE AS TOTAL_LENGTH
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND TABLE_NAME LIKE ?
 AND ENGINE LIKE 'InnoDB'
-AND DATA_FREE > 0;")->execute([$this->db, $this->name])->fetch(\PDO::FETCH_ASSOC)['DATA_LENGTH'];
+AND DATA_FREE > 0;")->execute([$this->db, $this->name])->fetch(\PDO::FETCH_ASSOC)['TOTAL_LENGTH'];
         } catch (Exception $e) {
             return 0;
         }
 
-        $oldSize = $this->dataLength;
-        $this->dataLength = $dataLength;
+        $oldLength = $this->totalLength;
+        $this->totalLength = floatval($totalLength);
 
-        return $dataLength - (int)$oldSize;
+        return (int)$totalLength - (int)$oldLength;
     }
 }
