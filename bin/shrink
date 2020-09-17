@@ -76,12 +76,12 @@ AND DATA_FREE > 0;")->execute([$path])->fetchAll(\PDO::FETCH_ASSOC);
         if ($table->ShouldShrink($ratio)) {
             echo $table->LogStart();
             try {
-                $table->Shrink($spdo);
+                $savings = $table->Shrink($spdo);
             } catch (\Exception $e) {
                 echo $e->getMessage();
                 continue;
             }
-            echo $table->LogFinish();
+            echo $table->LogFinish($savings / 1024);
         } else {
             echo $table->LogSkip();
         }
