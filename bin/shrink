@@ -41,7 +41,6 @@ if (!$config->isValidPlatform()) {
 $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
     echo "{$name}:\n";
-    print_r($rel);
     if ($rel[0]->scheme == 'mysql') {
         $dbs[$name] = $rel[0]->path;
     }
