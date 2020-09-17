@@ -1,6 +1,6 @@
 # InnoDB Shrink
 
-This packages provides a command-line tool that can be used to shrink InnoDB tables in a PHP application.
+This package provides a command-line tool that can be used to shrink InnoDB tables in a PHP application running on Platform.sh.
 
 ## Installation
 

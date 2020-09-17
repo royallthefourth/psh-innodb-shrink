@@ -41,7 +41,6 @@ if (!$config->isValidPlatform()) {
 $dbs = [];
 foreach (json_decode(base64_decode(getenv('PLATFORM_RELATIONSHIPS'))) as $name => $rel) {
     echo "{$name}:\n";
-    print_r($rel);
     if ($rel[0]->scheme == 'mysql') {
         $dbs[$name] = $rel[0]->path;
     }
@@ -61,7 +60,7 @@ foreach ($dbs as $rel => $path) {
     $tables = [];
     try {
         $tables = $spdo->prepare(
-            "SELECT TABLE_NAME, DATA_LENGTH, DATA_FREE
+            "SELECT TABLE_NAME, DATA_LENGTH + INDEX_LENGTH + DATA_FREE AS TOTAL_LENGTH, DATA_FREE
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND ENGINE LIKE 'InnoDB'
@@ -72,16 +71,16 @@ AND DATA_FREE > 0;")->execute([$path])->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     foreach ($tables as $t) {
-        $table = new \Shrinker\Table($t['TABLE_NAME'], $path, $t['DATA_FREE'], $t['DATA_LENGTH']);
+        $table = new \Shrinker\Table($t['TABLE_NAME'], $path, intval($t['DATA_FREE']), intval($t['TOTAL_LENGTH']));
         if ($table->ShouldShrink($ratio)) {
             echo $table->LogStart();
             try {
-                $table->Shrink($spdo);
+                $savings = $table->Shrink($spdo);
             } catch (\Exception $e) {
                 echo $e->getMessage();
                 continue;
             }
-            echo $table->LogFinish();
+            echo $table->LogFinish($savings);
         } else {
             echo $table->LogSkip();
         }
