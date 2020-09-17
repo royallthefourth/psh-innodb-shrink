@@ -75,7 +75,7 @@ class Table
 
         try {
             $dataLength = $spdo->prepare(
-                "SELECT DATA_LENGTH + INDEX_LENGTH AS DATA_LENGTH
+                "SELECT DATA_LENGTH + INDEX_LENGTH + DATA_FREE AS DATA_LENGTH
 FROM information_schema.tables
 WHERE TABLE_SCHEMA LIKE ?
 AND TABLE_NAME LIKE ?
